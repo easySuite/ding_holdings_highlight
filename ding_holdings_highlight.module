@@ -1,0 +1,147 @@
+<?php
+
+/**
+ * @file
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function ding_holdings_highlight_menu() {
+  $items = [];
+
+  $items['admin/structure/holdings_highlight'] = [
+    'title' => 'Highlight specific holding location',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => ['ding_holdings_highlight_settings_form'],
+    'access arguments' => ['administer holdings highlighting'],
+    'file' => 'ding_holdings_highlight.admin.inc',
+  ];
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function ding_holdings_highlight_permission() {
+  return [
+    'administer holdings highlighting' => [
+      'title' => t('Administer holdings placement highlight'),
+      'description' => t('Add placements for highlighting and descriptions for them.'),
+    ],
+  ];
+}
+
+/**
+ * Custom theming callback for rows element.
+ *
+ * Used to render draggable rows in a table.
+ *
+ * @see ting_facet_custom_admin_form()
+ * @see ding_holdings_highlight_theme()
+ */
+function theme_ding_holdings_highlight_element($variables) {
+  $element = $variables['element'];
+
+  $header = [
+    t('Branch'),
+    t('Placement'),
+    t('Message'),
+  ];
+
+  $rows = [];
+
+  foreach (element_children($element) as $k => $v) {
+    $rows[] = [
+      'data' => [
+        drupal_render($element[$k]['branch']),
+        drupal_render($element[$k]['placement']),
+        drupal_render($element[$k]['message']),
+      ],
+    ];
+  }
+
+  $table = [
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => [
+      'id' => 'ding-holdings-highlight-table',
+    ],
+  ];
+
+  $output = theme('table', $table);
+  $output .= drupal_render_children($element);
+
+  return $output;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function ding_holdings_highlight_theme($existing, $type, $theme, $path) {
+  return [
+    'ding_holdings_highlight_element' => [
+      'render element' => 'element',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_ding_availability_item_data_alter().
+ */
+function ding_holdings_highlight_ding_availability_item_data_alter(&$item) {
+  $highlighted_placements = variable_get('placements_wrapper', []);
+  $holding_branches = fbs_branches();
+
+  foreach ($item['holdings'] as $key => $holding) {
+    if (!empty($highlighted_placements)) {
+      foreach ($holding['placement'] as $pos => $string) {
+        foreach ($highlighted_placements as $placement_key => $highlighted_placement) {
+          $named_branch = $holding_branches[$highlighted_placement['branch']];
+          $match_branch = $holding['placement'][0] == $named_branch ? TRUE : FALSE;
+          $match_string = array_search($string, $highlighted_placement);
+          if ($match_branch && $match_string) {
+            $message = $highlighted_placements[$placement_key]['message'] ? $highlighted_placements[$placement_key]['message'] : '';
+            $html = [
+              '#type' => 'html_tag',
+              '#tag' => 'span',
+              '#attributes' => [
+                'class' => [
+                  'placement-highlight',
+                ],
+              ],
+              '#value' => $string,
+            ];
+            if ($message) {
+              $html['#attributes']['title'] = $message;
+            }
+
+            $item['holdings'][$key]['placement'][$pos] = drupal_render($html);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_secure_permissions().
+ */
+function ding_holdings_highlight_secure_permissions($role) {
+  $permissions = [
+    'administrators' => [
+      'administer holdings highlighting',
+    ],
+    'editor' => [
+      'administer holdings highlighting',
+    ],
+    'local administrator' => [
+      'administer holdings highlighting',
+    ],
+  ];
+
+  if (isset($permissions[$role])) {
+    return $permissions[$role];
+  }
+}

@@ -1,0 +1,8 @@
+name = Ding Holdings Highlight
+description = Allows to highlight specific holding location.
+package = easyOPAC
+core = 7.x
+stylesheets[all][] = css/ding_holdings_highlight.css
+dependencies[] = ding_availability
+dependencies[] = fbs
+dependencies[] = secure_permissions

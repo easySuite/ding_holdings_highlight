@@ -1,0 +1,8 @@
+.placement-highlight {
+  cursor: help;
+  color: #fff;
+  padding: 7px;
+  border-radius: 5px;
+  background-color: red;
+  text-decoration: underline;
+}
