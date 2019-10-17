@@ -10,13 +10,20 @@
 function ding_holdings_highlight_menu() {
   $items = [];
 
-  $items['admin/structure/holdings_highlight'] = [
+  $items['admin/config/ting/holdings/highlight'] = [
     'title' => 'Highlight specific holding location',
     'page callback' => 'drupal_get_form',
     'page arguments' => ['ding_holdings_highlight_settings_form'],
     'access arguments' => ['administer holdings highlighting'],
     'file' => 'ding_holdings_highlight.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
   ];
+
+  $items['admin/config/ting/holdings/settings'] = array(
+    'title' => 'Settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
 
   return $items;
 }
